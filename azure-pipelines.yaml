@@ -18,7 +18,7 @@ stages:
   jobs:
   - job: BuildAndTest
     pool:
-      vmImage: 'Ubuntu-16.04'
+      vmImage: 'Ubuntu-latest'
     steps:
 
     # Create or update the ACR resource
@@ -52,6 +52,22 @@ stages:
         command: build
         projects: '**/*.csproj'
         arguments: '--configuration $(buildConfiguration)'
+
+- task: SonarQubePrepare@5
+  displayName: 'Prepare SonarQube Analysis'
+  inputs:
+    SonarQube: 'sammy-be-sonarqube'  
+    organization: 'sammyworks'  
+    scannerMode: 'CLI'  
+    configMode: 'manual'
+    cliProjectKey: 'sammyappsinc_r-be'  
+    cliProjectName: 'sammy-app-be'  
+    cliProjectVersion: '0.0.1'
+    cliSources: 'src'
+    extraProperties: |
+      sonar.exclusions=**/*.test.*,**/*.spec.*,**/bin/**,**/obj/**
+      sonar.cs.opencover.reportsPaths=$(Build.SourcesDirectory)/**/coverage.opencover.xml
+      sonar.coverage.exclusions=**/Migrations/**,**/*.Generated.cs
 
     # Run unit tests
     - task: DotNetCoreCLI@2
